@@ -42,14 +42,21 @@
 * Управление кэшем
 
 # Установка
-`git clone https://github.com/<your-username>/chat-analyzer.git`
-`cd chat-analyzer`
+```bash
+# 1. Клонируем репозиторий и переходим в папку проекта
+git clone https://github.com/<your-username>/chat-analyzer.git
+cd chat-analyzer
 
-`python -m venv .venv`
-`.venv\Scripts\activate        # Windows`
-`source .venv/bin/activate    # Linux/macOS`
+# 2. Создаём виртуальное окружение
+python -m venv .venv
 
-`pip install -r requirements.txt`
+# 3. Активируем его
+.venv\Scripts\activate         # Windows (cmd / PowerShell)
+source .venv/bin/activate      # Linux / macOS
+
+# 4. Устанавливаем зависимости
+pip install -r requirements.txt
+```
 
 # Запуск
 `python main.py`
