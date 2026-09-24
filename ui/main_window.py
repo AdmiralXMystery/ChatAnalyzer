@@ -30,7 +30,7 @@ class MainWindow(QMainWindow):
         # ---------- Сайдбар ----------
         self.sidebar = QListWidget()
         self.sidebar.setObjectName("Sidebar")
-        self.sidebar.setFixedWidth(250)
+        self.sidebar.setFixedWidth(300)
         self.sidebar.setFocusPolicy(Qt.NoFocus)
         self.sidebar.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
