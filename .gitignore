@@ -3,6 +3,8 @@
 **/__pycache__/
 *.pyc
 main.dist/
+/main.build/
 csv_data/
 /settings.json
 cache/
+/main.realese/
