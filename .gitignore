@@ -2,9 +2,9 @@
 .venv/
 **/__pycache__/
 *.pyc
-main.dist/
+/main.dist/
 /main.build/
+/main.realese/
 csv_data/
 /settings.json
 cache/
-/main.realese/
