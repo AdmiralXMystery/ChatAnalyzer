@@ -1,0 +1,8 @@
+.idea/
+.venv/
+**/__pycache__/
+*.pyc
+main.dist/
+csv_data/
+/settings.json
+cache/

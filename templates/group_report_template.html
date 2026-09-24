@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Отчёт по групповому чату</title>
+<style>
+  body { font-family: 'Segoe UI', Roboto, sans-serif; background: #f5f7fa;
+         color: #222; margin: 0; padding: 24px; }
+  .container { max-width: 1200px; margin: 0 auto; }
+  h1 { font-size: 28px; margin-bottom: 24px; }
+  h2 { font-size: 20px; margin-top: 36px; padding-bottom: 8px;
+       border-bottom: 2px solid #e2e8f0; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+           gap: 16px; margin: 16px 0; }
+  .card { background: #fff; border-radius: 12px; padding: 18px;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.06); text-align: center; }
+  .card .value { font-size: 26px; font-weight: 700; color: #2b6cb0; }
+  .card .label { font-size: 13px; color: #718096; margin-top: 6px; }
+  table { width: 100%; border-collapse: collapse; background: #fff;
+          border-radius: 10px; overflow: hidden;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+  th, td { padding: 10px 12px; text-align: left; font-size: 14px;
+           border-bottom: 1px solid #edf2f7; }
+  th { background: #edf2f7; font-weight: 600; }
+  img { max-width: 100%; border-radius: 10px; margin-top: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  .dialogue { background: #1a202c; color: #e2e8f0; padding: 14px 16px;
+              border-radius: 10px; font-family: 'Consolas', monospace;
+              font-size: 13px; white-space: pre-wrap; line-height: 1.5; }
+  .msg { background: #fff; border-radius: 10px; padding: 12px 14px;
+         margin-bottom: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+  .msg .meta { font-size: 12px; color: #718096; margin-bottom: 6px; }
+  .tag { display: inline-block; background: #bee3f8; color: #2a4365;
+         border-radius: 6px; padding: 2px 8px; font-size: 12px; margin-left: 6px; }
+  .muted { color: #718096; font-size: 13px; }
+        /* Плашка с параметрами паузы */
+    .stat-badge {
+        background: #f3f4f6;
+        padding: 14px 16px;
+        border-radius: 8px;
+        margin: 12px 0 18px 0;
+        font-size: 15px;          /* Увеличено с 14px */
+        line-height: 1.5;
+    }
+    .stat-badge.fire {
+      background: #ffedd5;
+      border-left: 4px solid #f97316;
+      color: #7c2d12;
+    }
+    .chat-box {
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px;              /* было 18px */
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;                   /* было 10px */
+    }
+
+    /* Строка сообщения */
+    .chat-row { display: flex; width: 100%; }
+    .chat-row.left { justify-content: flex-start; }
+    .chat-row.user-alternate { justify-content: flex-end; }
+
+    .bubble {
+        max-width: 70%;
+        padding: 8px 12px;
+        border-radius: 12px;
+        font-size: 14px;          /* Увеличено с 13px для соответствия личной переписке */
+        line-height: 1.4;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        word-break: break-word;
+        white-space: normal;
+    }
+
+    .chat-row.left .bubble {
+      background: #ffffff;
+      color: #1e293b;
+      border-bottom-left-radius: 3px;
+    }
+    .chat-row.user-alternate .bubble {
+      background: #dbeafe;
+      color: #1e3a8a;
+      border-bottom-right-radius: 3px;
+    }
+
+    .bubble-meta {
+        display: block;
+        font-size: 12px;          /* Увеличено с 11px для лучшей читаемости */
+        color: #64748b;
+        margin-bottom: 4px;       /* Немного увеличили отступ до текста сообщения */
+        font-weight: 600;
+        line-height: 1.2;
+    }
+
+    /* Разделитель паузы */
+    .chat-divider {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      color: #64748b;
+      font-size: 13px;
+      font-style: italic;
+      margin: 10px 0;
+    }
+    .chat-divider::before,
+    .chat-divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px dashed #cbd5e1;
+    }
+    .chat-divider::before { margin-right: .6em; }
+    .chat-divider::after  { margin-left:  .6em; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📊 Отчёт по групповому чату</h1>
+
+  <!-- ====== ОБЪЁМЫ ====== -->
+  <h2>Общая статистика</h2>
+  <div class="cards">
+    <div class="card"><div class="value">{{ total_messages }}</div>
+      <div class="label">Всего сообщений</div></div>
+    <div class="card"><div class="value">{{ total_participants }}</div>
+      <div class="label">Участников</div></div>
+    {% if daily_activity %}
+    <div class="card"><div class="value">{{ daily_activity.avg_messages_per_day }}</div>
+      <div class="label">Сообщений в день (среднее)</div></div>
+    <div class="card"><div class="value">{{ daily_activity.active_days }}</div>
+      <div class="label">Активных дней</div></div>
+    <div class="card"><div class="value">{{ daily_activity.total_days_span }}</div>
+      <div class="label">Дней всего</div></div>
+    {% endif %}
+  </div>
+
+  <!-- ====== АКТИВНОСТЬ ====== -->
+  {% if activity_chart %}
+<h2>Активность переписки (по {{ timeline_scale_label }})</h2>
+  <img src="{{ activity_chart }}" alt="Активность">
+  {% endif %}
+
+  {% if top_senders_chart %}
+  <h2>Топ активных участников</h2>
+  <img src="{{ top_senders_chart }}" alt="Топ участников">
+  {% endif %}
+
+  <!-- ====== УЧАСТНИКИ ====== -->
+  {% if senders %}
+  <h2>Статистика по участникам</h2>
+  <table>
+    <thead><tr><th>Участник</th><th>Сообщений</th><th>Ср. длина (слов)</th></tr></thead>
+    <tbody>
+    {% for name, s in senders.items() %}
+      <tr>
+        <td>{{ name }}</td>
+        <td>{{ s.messages_count }}</td>
+        <td>{{ s.avg_words_per_message }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  <!-- ====== ДЛИННЫЕ СООБЩЕНИЯ ====== -->
+  {% if longest_messages_list %}
+  <h2>Топ-10 самых длинных сообщений</h2>
+  {% for m in longest_messages_list %}
+    <div class="msg">
+      <div class="meta">
+        <b>{{ m.sender }}</b> · {{ m.date }}
+        <span class="tag">{{ m.text_len }} симв.</span>
+      </div>
+      <div>{{ m.text }}</div>
+    </div>
+  {% endfor %}
+  {% endif %}
+
+
+{% if pause_data %}
+<h2>🕰️ САМЫЙ ДОЛГИЙ ПЕРЕРЫВ</h2>
+<div class="stat-badge fire">
+⏱️ <strong>Длительность перерыва:</strong> {{ pause_data.duration }}<br>
+📅 <small>Последнее сообщение до паузы: {{ pause_data.before_date }}</small><br>
+📅 <small>Первое сообщение после паузы: {{ pause_data.after_date }}</small>
+</div>
+
+<div class="chat-box">
+{% for line in pause_data.context_dialogue.split('\n') if line.strip() %}
+    {% set has_pause_marker = '[ПОСЛЕ ЭТОГО СООБЩЕНИЯ ПАУЗА]' in line %}
+    {% set clean_line = line.replace(' [ПОСЛЕ ЭТОГО СООБЩЕНИЯ ПАУЗА]', '') %}
+
+    {# Парсим строку формата: [YYYY-MM-DD HH:MM:SS] Имя: текст #}
+    {% set after_bracket = clean_line.split('] ', 1) %}
+    {% set meta = after_bracket[0].replace('[', '') %}
+    {% set rest = after_bracket[1] if after_bracket|length > 1 else '' %}
+    {% set sender_part = rest.split(': ', 1) %}
+    {% set sender = sender_part[0] %}
+    {% set text = sender_part[1] if sender_part|length > 1 else '' %}
+    {% set time_short = meta.split(' ')[1][:5] if ' ' in meta else meta %}
+
+    {% set is_me = sender == 'Вы' %}
+
+    <div class="chat-row {% if is_me %}user-alternate{% else %}left{% endif %}"><div class="bubble"><span class="bubble-meta">{{ sender }} {{ time_short }}</span>{{ text.strip() }}</div></div>
+
+
+    {% if has_pause_marker %}
+    <div class="chat-divider">
+        ⏸️ Пауза {{ pause_data.duration }}
+    </div>
+    {% endif %}
+{% endfor %}
+</div>
+{% endif %}
+
+  <!-- ====== ТОП СЛОВ ====== -->
+  {% if top_words %}
+  <h2>Топ слов</h2>
+  <p class="muted">
+    Уникальных значимых слов: <b>{{ word_map_unique }}</b> ·
+    Всего значимых слов: <b>{{ word_map_total }}</b>
+  </p>
+  <table>
+    <thead><tr><th>#</th><th>Слово</th><th>Частота</th></tr></thead>
+    <tbody>
+    {% for word, count in top_words %}
+      <tr><td>{{ loop.index }}</td><td>{{ word }}</td><td>{{ count }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  {% if wordcloud_path %}
+  <h2>Облако слов</h2>
+  <img src="{{ wordcloud_path }}" alt="Облако слов">
+  {% endif %}
+
+  <!-- ====== ЭМОДЗИ ====== -->
+  {% if emoji_data %}
+  <h2>Эмодзи</h2>
+  <div class="cards">
+    <div class="card"><div class="value">{{ emoji_data.total_count }}</div>
+      <div class="label">Всего эмодзи</div></div>
+    <div class="card"><div class="value">{{ emoji_data.avg_per_message }}</div>
+      <div class="label">Среднее на сообщение</div></div>
+    <div class="card"><div class="value">{{ emoji_data.percentage_of_messages }}%</div>
+      <div class="label">Сообщений с эмодзи</div></div>
+  </div>
+  <table>
+    <thead><tr><th>Эмодзи</th><th>Частота</th></tr></thead>
+    <tbody>
+    {% for e, c in emoji_data.top_emojis %}
+      <tr><td style="font-size:20px">{{ e }}</td><td>{{ c }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  <!-- ====== МАТ ====== -->
+  {% if profanity_data %}
+  <h2>Нецензурная лексика</h2>
+  <div class="cards">
+    <div class="card"><div class="value">{{ profanity_data.total_profanity_count }}</div>
+      <div class="label">Всего матерных слов</div></div>
+    <div class="card"><div class="value">{{ profanity_data.profanity_density }}</div>
+      <div class="label">Плотность на сообщение</div></div>
+  </div>
+  <table>
+    <thead><tr><th>Слово</th><th>Частота</th></tr></thead>
+    <tbody>
+    {% for w, c in profanity_data.top_profanity %}
+      <tr><td>{{ w }}</td><td>{{ c }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+</div>
+</body>
+</html>

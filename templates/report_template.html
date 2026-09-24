@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Анализ переписки</title>
+<style>
+body {
+font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+background-color: #f8f9fa;
+color: #212529;
+margin: 0;
+padding: 40px;
+}
+.container {
+max-width: 900px;
+margin: 0 auto;
+background: #ffffff;
+padding: 30px;
+border-radius: 8px;
+box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+h1, h2 {
+color: #4f46e5;
+border-bottom: 2px solid #e5e7eb;
+padding-bottom: 10px;
+}
+h1 { margin-top: 0; font-size: 24px; }
+h2 { margin-top: 30px; font-size: 20px; }
+h3 { font-size: 17px; }
+
+.stat-badge {
+background-color: #f3f4f6;
+padding: 15px;
+border-radius: 6px;
+margin-bottom: 10px;
+font-size: 15px;
+}
+.stat-badge.accent {
+background-color: #e0e7ff;
+border-left: 4px solid #4f46e5;
+}
+.stat-badge.fire {
+background-color: #ffedd5;
+border-left: 4px solid #f97316;
+color: #c2410c;
+}
+
+.user-card {
+border-left: 4px solid #4f46e5;
+background-color: #f9fafb;
+padding: 15px;
+margin-bottom: 15px;
+border-radius: 0 6px 6px 0;
+font-size: 15px;
+}
+.user-name {
+font-weight: bold;
+color: #1f2937;
+margin-bottom: 5px;
+font-size: 16px;
+}
+
+.initiator-container {
+background-color: #f9fafb;
+border: 1px solid #e5e7eb;
+border-radius: 6px;
+padding: 20px;
+margin-top: 15px;
+font-size: 15px;
+}
+.initiator-row {
+margin-bottom: 20px;
+}
+.progress-bar-bg {
+background-color: #e5e7eb;
+border-radius: 9999px;
+height: 12px;
+width: 100%;
+margin-top: 8px;
+overflow: hidden;
+}
+.progress-bar-fill {
+background-color: #4f46e5;
+height: 100%;
+border-radius: 9999px;
+}
+
+.chat-box {
+background-color: #f1f5f9;
+border: 1px solid #e2e8f0;
+border-radius: 12px;
+padding: 20px;
+margin-top: 15px;
+display: flex;
+flex-direction: column;
+gap: 12px;
+}
+.chat-row {
+display: flex;
+width: 100%;
+}
+.chat-row.left { justify-content: flex-start; }
+.chat-row.right { justify-content: flex-start; }
+.chat-row.user-alternate { justify-content: flex-end; }
+
+.bubble {
+max-width: 70%;
+padding: 10px 14px;
+border-radius: 12px;
+font-size: 14px;
+line-height: 1.4;
+position: relative;
+box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.chat-row.left .bubble {
+background-color: #ffffff;
+color: #1e293b;
+border-bottom-left-radius: 2px;
+}
+.chat-row.user-alternate .bubble {
+background-color: #dbeafe;
+color: #1e3a8a;
+border-bottom-right-radius: 2px;
+}
+.bubble-meta {
+display: block;
+font-size: 12px;
+color: #64748b;
+margin-bottom: 4px;
+font-weight: 600;
+}
+.chat-ellipsis {
+text-align: center;
+color: #64748b;
+font-style: italic;
+margin-top: 8px;
+}
+
+/* ============ ТАБЛИЦА - УВЕЛИЧЕННЫЙ ШРИФТ ============ */
+table {
+width: 100%;
+border-collapse: collapse;
+margin-top: 15px;
+font-size: 15px; /* Увеличено с 14px */
+}
+th, td {
+text-align: left;
+padding: 10px 12px;
+border-bottom: 1px solid #e5e7eb;
+vertical-align: top;
+}
+th {
+background-color: #f3f4f6;
+color: #374151;
+font-weight: 600;
+font-size: 15px; /* Увеличено с 14px */
+}
+.msg-text {
+font-style: italic;
+color: #4b5563;
+max-width: 400px;
+word-break: break-word;
+font-size: 14px; /* Увеличено с 13px */
+}
+.msg-len {
+font-weight: bold;
+color: #059669;
+font-size: 15px; /* Увеличено */
+}
+
+.records-grid {
+display: flex;
+gap: 20px;
+margin-top: 15px;
+margin-bottom: 25px;
+}
+.record-card {
+flex: 1;
+padding: 20px;
+border-radius: 8px;
+color: #ffffff;
+}
+.record-card.fastest {
+background: linear-gradient(135deg, #059669, #10b981);
+}
+.record-card.slowest {
+background: linear-gradient(135deg, #dc2626, #f87171);
+}
+.record-title {
+font-size: 13px;
+text-transform: uppercase;
+letter-spacing: 1px;
+opacity: 0.9;
+margin-bottom: 5px;
+}
+.record-value {
+font-size: 24px;
+font-weight: bold;
+margin-bottom: 5px;
+}
+.record-winner {
+font-size: 14px;
+background: rgba(255,255,255,0.2);
+padding: 4px 8px;
+border-radius: 4px;
+display: inline-block;
+}
+.slowest-highlight {
+background-color: #fee2e2 !important;
+border: 1px solid #fca5a5;
+border-left: 4px solid #ef4444 !important;
+color: #991b1b !important;
+}
+.charts-container {
+margin-top: 25px;
+margin-bottom: 25px;
+text-align: center;
+}
+.report-chart {
+max-width: 100%;
+height: auto;
+border-radius: 6px;
+box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.words-flex-container {
+display: flex;
+gap: 20px;
+margin-top: 15px;
+}
+.words-column {
+flex: 1;
+background-color: #f9fafb;
+border: 1px solid #e5e7eb;
+border-radius: 8px;
+padding: 20px;
+font-size: 14px;
+}
+.words-list-html {
+list-style: none;
+padding: 0;
+margin: 0;
+}
+.word-item {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 6px 0;
+border-bottom: 1px dashed #e5e7eb;
+}
+.word-item:last-child {
+border-bottom: none;
+}
+.word-text {
+font-weight: 500;
+color: #374151;
+}
+.word-count-badge {
+background-color: #e0e7ff;
+color: #4f46e5;
+font-size: 13px;
+font-weight: bold;
+padding: 2px 8px;
+border-radius: 9999px;
+}
+.vocab-grid {
+display: flex;
+gap: 20px;
+margin-top: 15px;
+margin-bottom: 25px;
+}
+.vocab-card {
+flex: 1;
+background: #ffffff;
+border: 1px solid #e5e7eb;
+border-top: 4px solid #8b5cf6;
+border-radius: 8px;
+padding: 20px;
+box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+font-size: 14px;
+}
+.vocab-header {
+font-size: 16px;
+font-weight: bold;
+color: #1f2937;
+margin-bottom: 15px;
+display: flex;
+align-items: center;
+gap: 8px;
+}
+.ttr-block {
+text-align: center;
+background-color: #f5f3ff;
+padding: 15px;
+border-radius: 6px;
+margin-bottom: 15px;
+}
+.ttr-value {
+font-size: 28px;
+font-weight: bold;
+color: #6d28d9;
+line-height: 1;
+}
+.ttr-label {
+font-size: 12px;
+color: #7c3aed;
+text-transform: uppercase;
+letter-spacing: 0.5px;
+margin-top: 5px;
+font-weight: 600;
+}
+.vocab-metric {
+display: flex;
+justify-content: space-between;
+padding: 8px 0;
+border-bottom: 1px solid #f3f4f6;
+font-size: 14px;
+}
+.vocab-metric:last-child {
+border-bottom: none;
+}
+.vocab-metric-label {
+color: #4b5563;
+}
+.vocab-metric-value {
+font-weight: 600;
+color: #1f2937;
+}
+.stat-badge.emoji-accent {
+background-color: #fef9c3;
+border-left: 4px solid #eab308;
+color: #854d0e;
+}
+.emoji-grid {
+display: flex;
+gap: 20px;
+margin-top: 15px;
+margin-bottom: 25px;
+}
+.emoji-card {
+flex: 1;
+background: #ffffff;
+border: 1px solid #e5e7eb;
+border-top: 4px solid #eab308;
+border-radius: 8px;
+padding: 20px;
+box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+font-size: 14px;
+}
+.emoji-badge-container {
+display: flex;
+flex-wrap: wrap;
+gap: 8px;
+margin-top: 10px;
+}
+.emoji-inline-badge {
+display: inline-flex;
+align-items: center;
+background-color: #fef08a;
+color: #854d0e;
+padding: 4px 10px;
+border-radius: 9999px;
+font-size: 14px;
+font-weight: bold;
+}
+.emoji-inline-badge .count {
+font-size: 12px;
+opacity: 0.75;
+margin-left: 4px;
+}
+.emoji-chain {
+display: flex;
+flex-wrap: wrap;
+align-items: center;
+gap: 6px;
+background-color: #fefeff;
+padding: 10px;
+border-radius: 6px;
+border: 1px dashed #fde047;
+margin-top: 10px;
+}
+.emoji-chain-item {
+font-size: 16px;
+}
+.emoji-chain-arrow {
+color: #ca8a04;
+font-size: 12px;
+}
+.spell-grid {
+display: flex;
+gap: 20px;
+margin-top: 15px;
+margin-bottom: 25px;
+}
+.spell-card {
+flex: 1;
+background: #ffffff;
+border: 1px solid #e5e7eb;
+border-top: 4px solid #06b6d4;
+border-radius: 8px;
+padding: 20px;
+box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+font-size: 14px;
+}
+.spell-density-block {
+text-align: center;
+background-color: #ecfeff;
+padding: 12px;
+border-radius: 6px;
+margin: 15px 0;
+}
+.spell-density-value {
+font-size: 28px;
+font-weight: bold;
+color: #0891b2;
+line-height: 1;
+}
+.spell-density-label {
+font-size: 12px;
+color: #0e7490;
+text-transform: uppercase;
+letter-spacing: 0.5px;
+margin-top: 5px;
+font-weight: 600;
+}
+.misspelled-container {
+display: flex;
+flex-wrap: wrap;
+gap: 6px;
+margin-top: 8px;
+}
+.misspelled-badge {
+background-color: #f3f4f6;
+color: #374151;
+padding: 3px 8px;
+border-radius: 4px;
+font-size: 13px;
+border: 1px solid #e5e7eb;
+}
+.misspelled-badge .multiplier {
+color: #dc2626;
+font-weight: bold;
+margin-left: 2px;
+}
+.profanity-grid {
+display: flex;
+gap: 20px;
+margin-top: 15px;
+margin-bottom: 25px;
+}
+.profanity-card {
+flex: 1;
+background: #ffffff;
+border: 1px solid #e5e7eb;
+border-top: 4px solid #ef4444;
+border-radius: 8px;
+padding: 20px;
+box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+font-size: 14px;
+}
+.profanity-density-block {
+text-align: center;
+background-color: #fef2f2;
+padding: 12px;
+border-radius: 6px;
+margin: 15px 0;
+}
+.profanity-density-value {
+font-size: 28px;
+font-weight: bold;
+color: #dc2626;
+line-height: 1;
+}
+.profanity-density-label {
+font-size: 12px;
+color: #991b1b;
+text-transform: uppercase;
+letter-spacing: 0.5px;
+margin-top: 5px;
+font-weight: 600;
+}
+.profanity-badge-container {
+display: flex;
+flex-wrap: wrap;
+gap: 6px;
+margin-top: 8px;
+}
+.profanity-badge {
+background-color: #1e293b;
+color: #f8fafc;
+padding: 3px 8px;
+border-radius: 4px;
+font-size: 13px;
+}
+.profanity-badge .multiplier {
+color: #fca5a5;
+font-weight: bold;
+margin-left: 2px;
+}
+.laugh-grid {
+display: flex;
+gap: 20px;
+margin-top: 15px;
+margin-bottom: 25px;
+}
+.laugh-card {
+flex: 1;
+background: #ffffff;
+border: 1px solid #e5e7eb;
+border-top: 4px solid #f97316;
+border-radius: 8px;
+padding: 20px;
+box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+font-size: 14px;
+}
+.laugh-count-block {
+text-align: center;
+background-color: #fff7ed;
+padding: 12px;
+border-radius: 6px;
+margin: 15px 0;
+}
+.laugh-count-value {
+font-size: 28px;
+font-weight: bold;
+color: #ea580c;
+line-height: 1;
+}
+.laugh-count-label {
+font-size: 12px;
+color: #9a3412;
+text-transform: uppercase;
+letter-spacing: 0.5px;
+margin-top: 5px;
+font-weight: 600;
+}
+.chat-divider {
+display: flex;
+align-items: center;
+text-align: center;
+color: #64748b;
+font-size: 13px;
+font-style: italic;
+margin: 15px 0;
+width: 100%;
+}
+.chat-divider::before, .chat-divider::after {
+content: '';
+flex: 1;
+border-bottom: 1px dashed #cbd5e1;
+}
+.chat-divider:not(:empty)::before {
+margin-right: .5em;
+}
+.chat-divider:not(:empty)::after {
+margin-left: .5em;
+}
+.no-split {
+page-break-inside: avoid !important;
+break-inside: avoid !important;
+}
+
+/* ГРУППА ДЛЯ СЕССИИ - ЧТОБЫ НЕ РАЗРЫВАТЬСЯ */
+.session-group {
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+/* КОНТЕЙНЕР ДЛЯ БЛОКОВ, КОТОРЫЕ МОЖНО ПЕРЕНЕСТИ ВМЕСТЕ */
+.keep-together {
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+/* ============ ОСНОВНЫЕ ИЗМЕНЕНИЯ ДЛЯ PDF ============ */
+@media print {
+    @page {
+        size: A4;
+        margin: 12mm 10mm;
+    }
+
+    body {
+        background-color: #ffffff;
+        padding: 0;
+        font-size: 12px;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .container {
+        box-shadow: none;
+        padding: 8px 4px;
+        max-width: 100%;
+    }
+
+    /* УВЕЛИЧИВАЕМ ШРИФТЫ */
+    h1 { font-size: 20px; margin-top: 0; }
+    h2 { font-size: 17px; margin-top: 10px; }
+    h3 { font-size: 15px; }
+
+    .stat-badge { font-size: 13px; padding: 8px 12px; margin-bottom: 5px; }
+    .user-card { font-size: 13px; padding: 8px 12px; margin-bottom: 5px; }
+    .user-name { font-size: 14px; }
+    .initiator-container { font-size: 13px; padding: 12px; margin-top: 8px; }
+    .bubble { font-size: 12px; padding: 6px 10px; }
+    .bubble-meta { font-size: 10px; }
+
+    /* ============ ТАБЛИЦА - ЕЩЕ БОЛЬШЕ ШРИФТ В ПЕЧАТИ ============ */
+    table {
+        font-size: 14px !important; /* Увеличено с 12px */
+        margin-top: 8px;
+    }
+    th, td {
+        padding: 6px 8px;
+        font-size: 14px !important;
+    }
+    th { font-size: 14px !important; }
+    .msg-text {
+        font-size: 13px !important;
+        max-width: 250px;
+    }
+    .msg-len { font-size: 14px !important; }
+
+    .record-card { padding: 10px 14px; }
+    .record-title { font-size: 11px; }
+    .record-value { font-size: 20px; }
+    .record-winner { font-size: 12px; }
+
+    .vocab-card, .emoji-card, .spell-card,
+    .profanity-card, .laugh-card {
+        padding: 10px 12px;
+        font-size: 12px;
+    }
+
+    .vocab-header { font-size: 14px; }
+    .ttr-value, .spell-density-value,
+    .profanity-density-value, .laugh-count-value {
+        font-size: 22px;
+    }
+
+    .words-column { padding: 12px; font-size: 12px; }
+    .word-count-badge { font-size: 11px; }
+    .emoji-inline-badge { font-size: 12px; }
+    .emoji-chain-item { font-size: 14px; }
+    .emoji-chain-arrow { font-size: 10px; }
+
+    .chat-box { padding: 10px; gap: 6px; margin-top: 8px; }
+    .chat-divider { font-size: 11px; margin: 8px 0; }
+
+    /* УМЕНЬШАЕМ ОТСТУПЫ */
+    .records-grid, .vocab-grid, .emoji-grid,
+    .spell-grid, .profanity-grid, .laugh-grid,
+    .words-flex-container {
+        gap: 8px;
+        margin-top: 8px;
+        margin-bottom: 10px;
+    }
+
+    /* ============ НОВАЯ ЛОГИКА РАЗРЫВОВ ============ */
+
+    /* 1. ЗАПРЕТ РАЗРЫВОВ ВНУТРИ МАЛЕНЬКИХ БЛОКОВ */
+    .stat-badge, .user-card, .initiator-container,
+    .records-grid, .vocab-grid,
+    .emoji-grid, .spell-grid, .profanity-grid,
+    .laugh-grid, .words-flex-container, .no-split {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    /* 2. ГРУППА СЕССИИ - ВСЁ ВМЕСТЕ */
+    .session-group {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    /* 3. ГРАФИКИ - НЕ РАЗРЫВАТЬ, НО НЕ РАСТЯГИВАТЬ */
+    .charts-container {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        max-height: 65vh;
+        overflow: hidden;
+        margin: 5px 0;
+    }
+
+    .report-chart {
+        max-width: 100% !important;
+        max-height: 60vh !important;
+        width: auto !important;
+        height: auto !important;
+        object-fit: contain;
+    }
+
+    /* 4. ТАБЛИЦА - НЕ РАЗРЫВАТЬ, НО РАЗРЕШИТЬ ПЕРЕНОС ЕСЛИ ОЧЕНЬ ДЛИННАЯ */
+    table {
+        page-break-inside: auto;
+        break-inside: auto;
+    }
+
+    table tr {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+    /* 5. КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: НЕ ПЕРЕНOCИТЬ ПРИНУДИТЕЛЬНО,
+       ЕСЛИ НА СТРАНИЦЕ ЕСТЬ МЕСТО */
+    h2 {
+        page-break-before: auto;
+        break-before: auto;
+        page-break-after: avoid;
+        break-after: avoid;
+        padding-top: 5px;
+        margin-top: 8px;
+    }
+
+    /* 6. ПРИНУДИТЕЛЬНЫЙ РАЗРЫВ ТОЛЬКО ДЛЯ ОЧЕНЬ БОЛЬШИХ БЛОКОВ,
+       КОТОРЫЕ ТОЧНО НЕ ВЛЕЗУТ */
+    .force-page-break {
+        page-break-before: auto !important;
+        break-before: auto !important;
+    }
+
+    /* 7. СКРЫВАЕМ ТЕНИ ДЛЯ ЭКОНОМИИ МЕСТА */
+    .record-card, .vocab-card, .emoji-card,
+    .spell-card, .profanity-card, .laugh-card {
+        box-shadow: none;
+    }
+
+    /* 8. КОМПАКТНЫЙ ЧАТ */
+    .chat-row { margin-bottom: 2px; }
+    .bubble { max-width: 85%; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+<h1>📊 ОБЩАЯ СТАТИСТИКА ОБЪЕМОВ ПЕРЕПИСКИ</h1>
+
+<div class="stat-badge">
+💬 <strong>Всего сообщений в диалоге:</strong> {{ total_messages }}
+</div>
+<div class="stat-badge">
+📝 <strong>Средняя длина сообщения:</strong> {{ overall_avg_words }} слов(а)
+</div>
+
+<div class="keep-together">
+<h3>👥 Статистика по участникам:</h3>
+{% for sender, user_data in senders.items() %}
+<div class="user-card">
+<div class="user-name">👤 {{ sender }}</div>
+<div>└─ Отправлено сообщений: <strong>{{ user_data.messages_count }}</strong></div>
+<div>└─ Средняя длина: <strong>{{ user_data.avg_words_per_message }}</strong> слов(а)</div>
+</div>
+{% endfor %}
+</div>
+
+{% if msg_length_charts_exists %}
+<div class="charts-container" style="page-break-inside: avoid; break-inside: avoid; margin-top: 20px; margin-bottom: 20px;">
+    <img src="msg_length_dynamics.png" alt="Динамика длины сообщений" class="report-chart">
+</div>
+{% endif %}
+
+<h2>👑 КТО ЧАЩЕ НАЧИНАЕТ ДИАЛОГ (ИНИЦИАТОРЫ)</h2>
+<div class="stat-badge accent">
+🔄 <strong>Всего новых диалогов зафиксировано:</strong> {{ initiation_stats.total_new_dialogues }}
+</div>
+
+<div class="initiator-container">
+<h3>👥 Распределение активности:</h3>
+{% for sender, data in initiation_stats.initiators.items() %}
+<div class="initiator-row">
+<div style="display: flex; justify-content: space-between; font-weight: 500;">
+<span>👤 {{ sender }}</span>
+<span>Начинал(а) переписку: <strong>{{ data.count }}</strong> раз(а) ({{ data.percentage }}%)</span>
+</div>
+<div class="progress-bar-bg">
+<div class="progress-bar-fill" style="width: {{ data.percentage }}%;"></div>
+</div>
+</div>
+{% endfor %}
+</div>
+
+{% if session_data %}
+<div class="session-group">
+<h2>🔥 САМЫЙ ДЛИННЫЙ НЕПРЕРЫВНЫЙ ДИАЛОГ</h2>
+<div class="stat-badge fire">
+⏱️ <strong>Длительность сессии:</strong> {{ session_data.duration }} |
+💬 <strong>Сообщений в сессии:</strong> {{ session_data.messages_count }}<br>
+📅 <small>С {{ session_data.start_time }} по {{ session_data.end_time }}</small>
+</div>
+
+<div class="chat-box">
+{% for msg in session_data.preview_messages %}
+{% if msg.is_divider %}
+<div class="chat-divider">
+{{ msg.text }}
+</div>
+{% else %}
+{% set is_me = (msg.sender|trim|lower) in ['вы', 'you', 'я'] %}
+<div class="chat-row left {% if is_me %}user-alternate{% endif %}">
+<div class="bubble">
+<span class="bubble-meta">{{ msg.sender }} • {{ msg.time }}</span>
+{{ msg.text }}
+</div>
+</div>
+{% endif %}
+{% endfor %}
+</div>
+</div>
+{% endif %}
+
+<h2>🔝 ТОП САМЫХ ДЛИННЫХ СООБЩЕНИЙ</h2>
+<table>
+<thead>
+<tr>
+<th>👤 Автор</th>
+<th>📅 Дата</th>
+<th>📏 Длина</th>
+<th>💬 Текст сообщения</th>
+</tr>
+</thead>
+<tbody>
+{% for msg in longest_messages_list %}
+<tr>
+<td><strong>{{ msg.sender }}</strong></td>
+<td><small>{{ msg.date }}</small></td>
+<td class="msg-len">{{ msg.text_len }} симв.</td>
+<td class="msg-text">«{{ msg.text }}»</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+{% if speed_data %}
+<div class="no-split">
+<h2>⚡ ДЕТАЛЬНЫЙ АНАЛИЗ СКОРОСТИ ОТВЕТОВ</h2>
+
+<div class="stat-badge accent">
+📊 <strong>По всей переписке:</strong><br>
+• Среднее время ответа: <strong>{{ speed_data.overall_avg }}</strong><br>
+• Медианное время ответа: <strong>{{ speed_data.overall_median }}</strong>
+</div>
+
+<div class="records-grid">
+<div class="record-card fastest">
+<div class="record-title">🚀 Самый быстрый ответ</div>
+<div class="record-value">{{ speed_data.fastest_time }}</div>
+<div class="record-winner">👤 {{ speed_data.fastest_winner }}</div>
+</div>
+<div class="record-card slowest">
+<div class="record-title">🐢 Самый долгий ответ</div>
+<div class="record-value">{{ speed_data.slowest_time }}</div>
+<div class="record-winner">👤 {{ speed_data.slowest_winner }}</div>
+</div>
+</div>
+
+{% if speed_data.slowest_winner_context_messages %}
+<div class="initiator-container" style="margin-bottom: 25px;">
+<h3 style="margin-top: 0; color: #dc2626;">🎬 Контекст самого долгого ответа:</h3>
+<div class="chat-box" style="background-color: #f8fafc; border-color: #cbd5e1;">
+{% for msg in speed_data.slowest_winner_context_messages %}
+{% set is_me = (msg.sender|trim|lower) in ['вы', 'you', 'я'] %}
+<div class="chat-row left {% if is_me %}user-alternate{% endif %}">
+<div class="bubble {% if msg.is_slowest %}slowest-highlight{% endif %}">
+<span class="bubble-meta">{{ msg.sender }} • {{ msg.date }} {{ msg.time }}</span>
+{{ msg.text }}
+</div>
+</div>
+{% endfor %}
+</div>
+</div>
+{% endif %}
+
+<div>
+<h3>👥 Скорость ответов по участникам:</h3>
+{% for sender, user_time in speed_data.senders.items() %}
+<div class="user-card" style="border-left-color: #10b981;">
+<div class="user-name">👤 {{ sender }}</div>
+<div>├─ Среднее время реакции: <strong>{{ user_time.avg_reply }}</strong></div>
+<div>└─ Медианное время (реальное): <strong>{{ user_time.median_reply }}</strong></div>
+</div>
+{% endfor %}
+</div>
+</div>
+{% endif %}
+
+<h2>📈 ВИЗУАЛЬНЫЙ АНАЛИЗ АКТИВНОСТИ</h2>
+<div style="display: flex; flex-direction: column; gap: 20px;">
+
+<!-- Первый график (по часам) -->
+<div class="charts-container" style="page-break-inside: avoid; break-inside: avoid; margin: 0;">
+<img src="chart_hourly.png" alt="Средняя активность по времени суток" class="report-chart">
+</div>
+
+<!-- Второй график (по месяцам) -->
+<div class="charts-container" style="page-break-inside: avoid; break-inside: avoid; margin: 0;">
+<img src="chart_monthly.png" alt="Интенсивность общения по месяцам" class="report-chart">
+</div>
+
+</div>
+
+{% if llm_charts_exists %}
+<h2>🤖 СЕМАНТИЧЕСКИЙ АНАЛИЗ ДИАЛОГОВ (LLM)</h2>
+<div style="display: flex; flex-direction: column; gap: 20px;">
+<!-- График тем -->
+<div class="charts-container" style="page-break-inside: avoid; break-inside: avoid; margin: 0;">
+<img src="chart_topics.png" alt="Распределение диалогов по темам" class="report-chart">
+</div>
+<!-- График характера -->
+<div class="charts-container" style="page-break-inside: avoid; break-inside: avoid; margin: 0;">
+<img src="chart_sentiment.png" alt="Распределение диалогов по характеру" class="report-chart">
+</div>
+</div>
+{% endif %}
+
+{% if top_words %}
+<h2>📊 ТОП САМЫХ ЧАСТО ИСПОЛЬЗУЕМЫХ СЛОВ (ЛЕММЫ)</h2>
+
+<div class="words-flex-container">
+<!-- Общий топ по всей переписке -->
+<div class="words-column" style="border-top: 4px solid #4f46e5;">
+<h3 style="margin-top:0;">🌍 Общий топ по всей переписке:</h3>
+<ul class="words-list-html">
+{% for word, count in top_words.overall %}
+<li class="word-item">
+<span class="word-text">🔹 {{ word }}</span>
+<span class="word-count-badge">{{ count }} раз(а)</span>
+</li>
+{% endfor %}
+</ul>
+</div>
+</div>
+
+<!-- Топ по каждому участнику отдельно -->
+<div class="words-flex-container">
+{% for sender, words_list in top_words.senders.items() %}
+<div class="words-column" style="border-top: 4px solid #10b981;">
+<h3 style="margin-top:0;">👤 Топ участника: {{ sender }}</h3>
+<ul class="words-list-html">
+{% for word, count in words_list %}
+<li class="word-item">
+<span class="word-text">{{ word }}</span>
+<span class="word-count-badge" style="background-color: #d1fae5; color: #065f46;">{{ count }} раз(а)</span>
+</li>
+{% endfor %}
+</ul>
+</div>
+{% endfor %}
+</div>
+{% endif %}
+
+{% if vocabulary_data %}
+<h2>📚 АНАЛИЗ ЛЕКСИЧЕСКОГО БОГАТСТВА РЕЧИ</h2>
+<div class="vocab-grid">
+{% for sender, metrics in vocabulary_data.items() %}
+<div class="vocab-card">
+<div class="vocab-header">👤 Участник: {{ sender }}</div>
+
+<div class="ttr-block">
+<div class="ttr-value">{{ metrics.lexical_diversity_ttr }}</div>
+<div class="ttr-label">Коэффициент разнообразия (TTR)</div>
+</div>
+
+<div class="vocab-metric">
+<span class="vocab-metric-label">📚 Значимых слов сказано:</span>
+<span class="vocab-metric-value">{{ metrics.total_meaningful_words }}</span>
+</div>
+<div class="vocab-metric">
+<span class="vocab-metric-label">💎 Уникальных слов (лемм):</span>
+<span class="vocab-metric-value">{{ metrics.unique_words_count }}</span>
+</div>
+<div class="vocab-metric" style="font-size: 0.8em; color: #6b7280; font-style: italic; border-top: 1px dashed #e5e7eb; margin-top: 5px; padding-top: 8px;">
+* Расчет произведен на выборке из {{ metrics.total_meaningful_words }} слов.
+</div>
+</div>
+{% endfor %}
+</div>
+{% endif %}
+
+{% if ttr_history_exists %}
+<div class="charts-container" style="margin-top: 15px;">
+<img src="ttr_dynamics.png" alt="Динамика TTR" class="report-chart">
+</div>
+{% endif %}
+
+{% if emoji_data %}
+<h2>✨ АНАЛИЗ ИСПОЛЬЗОВАНИЯ ЭМОДЗИ (EMOJI STATS)</h2>
+
+<div class="stat-badge emoji-accent">
+🌍 <strong>Общая статистика по чату:</strong><br>
+• Всего эмодзи отправлено: <strong>{{ emoji_data.overall.total_count }} шт.</strong><br>
+• Сообщений со смайликами: <strong>{{ emoji_data.overall.percentage_of_messages }}%</strong><br>
+• Плотность: <strong>{{ emoji_data.overall.avg_per_message }}</strong> эмодзи на сообщение
+
+<div style="margin-top: 10px; font-weight: 500;">🔥 Самые популярные в чате:</div>
+<div class="emoji-badge-container">
+{% for e, c in emoji_data.overall.top_emojis %}
+<span class="emoji-inline-badge">{{ e }} <span class="count">({{ c }})</span></span>
+{% endfor %}
+</div>
+</div>
+
+<div class="emoji-grid">
+{% for sender, stats in emoji_data.senders.items() %}
+<div class="emoji-card">
+<div class="user-name">👤 {{ sender }}</div>
+<div style="margin-top: 8px;">├─ Отправлено эмодзи: <strong>{{ stats.total_count }} шт.</strong></div>
+<div>├─ Сообщений с эмодзи: <strong>{{ stats.percentage_of_messages }}%</strong></div>
+<div>└─ Среднее на сообщ.: <strong>{{ stats.avg_per_message }} шт.</strong></div>
+
+<div style="margin-top: 15px; font-weight: 600; font-size: 0.9em; color: #71717a;">👑 Личный ТОП:</div>
+<div class="emoji-chain">
+{% if stats.top_emojis %}
+{% for e, c in stats.top_emojis %}
+<span class="emoji-chain-item" title="Повторений: {{ c }}">{{ e }}</span>
+{% if not loop.last %}<span class="emoji-chain-arrow">➔</span>{% endif %}
+{% endfor %}
+{% else %}
+<span style="font-style: italic; color: #a1a1aa; font-size: 0.9em;">Нет эмодзи</span>
+{% endif %}
+</div>
+</div>
+{% endfor %}
+</div>
+{% endif %}
+
+{% if pos_charts_exists %}
+<h2>📊 РАСПРЕДЕЛЕНИЕ ЧАСТЕЙ РЕЧИ</h2>
+<div class="charts-container">
+<img src="pos_distribution.png" alt="Распределение частей речи" class="report-chart">
+</div>
+{% endif %}
+
+{% if grammar_charts %}
+<h2>🧠 ПСИХОЛИНГВИСТИЧЕСКИЙ АНАЛИЗ РЕЧИ</h2>
+<div style="display: flex; flex-direction: column; gap: 20px;">
+<!-- Цикл выведет картинку для каждого участника, используя словарь путей из Python -->
+{% for sender, img_path in grammar_charts.items() %}
+<div class="charts-container" style="page-break-inside: avoid; break-inside: avoid;">
+<img src="{{ img_path }}" alt="Грамматика {{ sender }}" class="report-chart">
+</div>
+{% endfor %}
+</div>
+{% endif %}
+
+{% if spell_stats %}
+<h2>🔍 АНАЛИЗ ОРФОГРАФИИ И ОПЕЧАТОК В ТЕКСТЕ</h2>
+<div class="spell-grid">
+{% for sender, data in spell_stats.items() %}
+<div class="spell-card">
+<div class="user-name">👤 {{ sender }}</div>
+<div style="margin-top: 8px; font-size: 0.95em; color: #4b5563;">
+Total опечаток найдено: <strong style="color: #1f2937;">{{ data.total_errors }} шт.</strong>
+</div>
+
+<div class="spell-density-block">
+<div class="spell-density-value">{{ data.error_density }}</div>
+<div class="spell-density-label">Ошибок на одно сообщение</div>
+</div>
+
+<div style="margin-top: 15px; font-weight: 600; font-size: 0.9em; color: #4b5563;">✏️ Частые опечатки:</div>
+<div class="misspelled-container">
+{% if data.top_misspelled %}
+{% for word, count in data.top_misspelled %}
+<span class="misspelled-badge">
+«{{ word }}» <span class="multiplier">×{{ count }}</span>
+</span>
+{% endfor %}
+{% else %}
+<span style="font-style: italic; color: #9ca3af; font-size: 0.9em;">Частые опечатки отсутствуют</span>
+{% endif %}
+</div>
+</div>
+{% endfor %}
+</div>
+{% endif %}
+
+{% if error_charts_exists %}
+<div class="charts-container" style="margin-top: 15px;">
+<img src="error_dynamics.png" alt="Динамика опечаток" class="report-chart">
+</div>
+{% endif %}
+
+{% if profanity_data %}
+<div class="no-split">
+<h2>🔞 АНАЛИЗ ИСПОЛЬЗОВАНИЯ НЕЦЕНЗУРНОЙ ЛЕКСИКИ</h2>
+
+<div class="profanity-grid">
+{% for sender, data in profanity_data.items() %}
+<div class="profanity-card">
+<div class="user-name">👤 Участник: {{ sender }}</div>
+<div style="margin-top: 8px; font-size: 0.95em; color: #4b5563;">
+Использовано мата: <strong style="color: #1f2937;">{{ data.total_profanity_count }} раз(а)</strong>
+</div>
+
+<div class="profanity-density-block">
+<div class="profanity-density-value">{{ data.profanity_density }}</div>
+<div class="profanity-density-label">Матерных слов на сообщение</div>
+</div>
+
+<div style="margin-top: 15px; font-weight: 600; font-size: 0.9em; color: #4b5563;">🤬 Личный ТОП слов:</div>
+<div class="profanity-badge-container">
+{% if data.top_profanity %}
+{% for word, count in data.top_profanity %}
+<span class="profanity-badge">
+'{{ word }}' <span class="multiplier">×{{ count }}</span>
+</span>
+{% endfor %}
+{% else %}
+<span style="font-style: italic; color: #9ca3af; font-size: 0.9em;">Мат отсутствует 🙌</span>
+{% endif %}
+</div>
+</div>
+{% endfor %}
+</div>
+
+<!-- Финальный график динамики мата (теперь лежит внутри общего контейнера .no-split) -->
+{% if profanity_charts_exists %}
+<div class="charts-container" style="margin-top: 15px;">
+<img src="profanity_dynamics.png" alt="Динамика мата" class="report-chart">
+</div>
+{% endif %}
+</div> <!-- ЗАКРЫВАЕМ НАШ КЛАСС no-split ТУТ -->
+{% endif %}
+
+
+{% if laugh_data %}
+<h2>😂 ИНДЕКС ЮМОРА И СМЕХА В ДИАЛОГЕ</h2>
+<div class="laugh-grid">
+{% for sender, data in laugh_data.items() %}
+<div class="laugh-card">
+<div class="user-name">👤 Участник: {{ sender }}</div>
+
+<div class="laugh-count-block">
+<div class="laugh-count-value">{{ data.total_laugh_count }}</div>
+<div class="laugh-count-label">Всего «ха-ха» в чате</div>
+</div>
+
+<div style="margin-top: 8px; font-size: 0.95em; color: #4b5563;">
+🔹 Плотность смеха: <strong style="color: #1f2937;">{{ data.laugh_density }}</strong> хиханьки-хаханьки на 1 сообщение
+</div>
+</div>
+{% endfor %}
+</div>
+{% endif %}
+
+{% if word_clouds %}
+<h2>☁️ ОБЛАКА СЛОВ УЧАСТНИКОВ</h2>
+<div style="display: flex; flex-direction: column; gap: 25px;">
+<!-- Выводим общее облако слов -->
+<div class="charts-container" style="page-break-inside: avoid; break-inside: avoid;">
+<img src="{{ word_clouds.overall }}" alt="Общее облако слов" class="report-chart">
+</div>
+
+<!-- Выводим персональные облака участников -->
+{% for sender, img_path in word_clouds.senders.items() %}
+<div class="charts-container" style="page-break-inside: avoid; break-inside: avoid;">
+<img src="{{ img_path }}" alt="Облако слов {{ sender }}" class="report-chart">
+</div>
+{% endfor %}
+</div>
+{% endif %}
+
+</div>
+
+</body>
+</html>
