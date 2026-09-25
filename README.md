@@ -44,13 +44,13 @@
 # Установка
 ```bash
 # 1. Клонируем репозиторий и переходим в папку проекта
-git clone https://github.com/<your-username>/chat-analyzer.git
-cd chat-analyzer
+git https://github.com/AdmiralXMystery/ChatAnalyzer.git
+cd ChatAnalyzer
 
 # 2. Создаём виртуальное окружение
 python -m venv .venv
 
-# 3. Активируем его
+# 3. Активируем виртуальное окружение
 .venv\Scripts\activate         # Windows (cmd / PowerShell)
 source .venv/bin/activate      # Linux / macOS
 
@@ -59,7 +59,9 @@ pip install -r requirements.txt
 ```
 
 # Запуск
-`python main.py`
+```bash
+python main.py
+```
 
 ## 📂 Структура проекта
 
