@@ -9,7 +9,7 @@
 # nuitka-project: --include-data-dir=pymorphy3_dicts_ru/data=pymorphy3_dicts_ru/data
 # nuitka-project: --include-data-dir=resources=resources
 # nuitka-project: --include-data-dir=.venv/Lib/site-packages/wordcloud=wordcloud
-# nuitka-project: --windows-icon-from-ico=analytical-chatting.ico
+# nuitka-project: --windows-icon-from-ico=chat_analyzer_icon.ico
 
 import sys
 import asyncio
