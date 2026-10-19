@@ -174,20 +174,20 @@ async def process_vk_archive_async(archive_root: str, target_dir: str,
             source_dir = root_path / "messages"
 
         if not source_dir.exists() or not source_dir.is_dir():
-            await log_callback(f"❌ Ошибка: Папка 'messages' не найдена по пути: {source_dir}\n")
+            log_callback(f"❌ Ошибка: Папка 'messages' не найдена по пути: {source_dir}\n")
             return
 
         target_path = Path(target_dir).resolve() if target_dir else None
         file_html_path = source_dir / "index-messages.html"
 
         if not file_html_path.exists():
-            await log_callback(f"❌ Ошибка: Файл индекса {file_html_path.name} не найден.\n")
+            log_callback(f"❌ Ошибка: Файл индекса {file_html_path.name} не найден.\n")
             return
 
         if copy_mode and target_path:
             target_path.mkdir(parents=True, exist_ok=True)
 
-        await log_callback(f"📖 Чтение и парсинг файла '{file_html_path.name}'...\n")
+        log_callback(f"📖 Чтение и парсинг файла '{file_html_path.name}'...\n")
         await asyncio.sleep(0.01)
 
         # ИЗМЕНЕНО: чтение и парсинг — в отдельный поток,
@@ -199,7 +199,7 @@ async def process_vk_archive_async(archive_root: str, target_dir: str,
         success_count = 0
         already_processed_count = 0
         mode_text = "копирование" if copy_mode else "переименование на месте"
-        await log_callback(f"⚙️ Режим работы: {mode_text}. Начинаем обработку...\n\n")
+        log_callback(f"⚙️ Режим работы: {mode_text}. Начинаем обработку...\n\n")
 
         for link in links:
             name = link.get_text(strip=True) or "Без названия"
@@ -235,19 +235,19 @@ async def process_vk_archive_async(archive_root: str, target_dir: str,
                                 str(final_folder_path),
                                 dirs_exist_ok=True
                             )
-                            await log_callback(f"✅ Скопирована уже переименованная: {new_folder_name}\n")
+                            log_callback(f"✅ Скопирована уже переименованная: {new_folder_name}\n")
                             success_count += 1
                             await asyncio.sleep(0.01)
                             continue
                         except Exception as e:
-                            await log_callback(f"⚠️ Ошибка копирования переименованной папки ({folder_id}): {e}\n")
+                            log_callback(f"⚠️ Ошибка копирования переименованной папки ({folder_id}): {e}\n")
 
             if source_folder_path.is_dir():
                 final_folder_path = (target_path if copy_mode else source_dir) / new_folder_name
 
                 try:
                     if final_folder_path.exists():
-                        await log_callback(f"⏭️ Пропущено (уже существует): {new_folder_name}\n")
+                        log_callback(f"⏭️ Пропущено (уже существует): {new_folder_name}\n")
                         continue
 
                     if copy_mode:
@@ -262,24 +262,24 @@ async def process_vk_archive_async(archive_root: str, target_dir: str,
                         await asyncio.to_thread(source_folder_path.rename, final_folder_path)
                         action_log = "переименовано на месте"
 
-                    await log_callback(f"✅ Успешно: [{name}] ({folder_id}) — {action_log}\n")
+                    log_callback(f"✅ Успешно: [{name}] ({folder_id}) — {action_log}\n")
                     success_count += 1
 
                 except Exception as e:
-                    await log_callback(f"⚠️ Ошибка обработки для папки ({folder_id}): {e}\n")
+                    log_callback(f"⚠️ Ошибка обработки для папки ({folder_id}): {e}\n")
 
                 # ИЗМЕНЕНО: пауза больше — успевает отработать UI-обновление
                 await asyncio.sleep(0.01)
 
         if success_count == 0 and already_processed_count > 0:
             if not copy_mode:
-                await log_callback(
+                log_callback(
                     f"ℹ️ Выполнение остановлено: все папки ({already_processed_count}) уже были переименованы ранее на месте!\n")
             else:
-                await log_callback(
+                log_callback(
                     f"ℹ️ Обработка завершена: новые папки не найдены, а переименованные папки уже скопированы в целевую директорию.\n")
         else:
-            await log_callback(f"\n🎉 Процесс полностью завершен! Всего успешно обработано чатов: {success_count}\n")
+            log_callback(f"\n🎉 Процесс полностью завершен! Всего успешно обработано чатов: {success_count}\n")
 
     except Exception as e:
-        await log_callback(f"💥 Критическая ошибка: {e}\n")
+        log_callback(f"💥 Критическая ошибка: {e}\n")
